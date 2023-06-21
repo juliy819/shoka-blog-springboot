@@ -10,10 +10,12 @@ import com.juliy.mapper.ArticleMapper;
 import com.juliy.mapper.CategoryMapper;
 import com.juliy.model.dto.CategoryDTO;
 import com.juliy.model.dto.ConditionDTO;
-import com.juliy.model.vo.*;
+import com.juliy.model.vo.CategoryAdminVO;
+import com.juliy.model.vo.CategoryOptionVO;
+import com.juliy.model.vo.CategoryVO;
+import com.juliy.model.vo.PageResult;
 import com.juliy.service.CategoryService;
 import com.juliy.utils.BeanCopyUtils;
-import com.juliy.utils.CommonUtils;
 import com.juliy.utils.PageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,14 +51,14 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     public PageResult<CategoryAdminVO> listCategoriesAdminByPage(ConditionDTO condition) {
         Long count = categoryMapper.selectCount(
                 new LambdaQueryWrapper<Category>().like(StrUtil.isNotBlank(condition.getKeywords()),
-                                                        Category::getCategoryName,
-                                                        condition.getKeywords()));
+                        Category::getCategoryName,
+                        condition.getKeywords()));
         if (count == 0) {
             return new PageResult<>();
         }
         List<CategoryAdminVO> categoryList = categoryMapper.selectCategoriesAdmin(PageUtils.getLimitCurrent(),
-                                                                                  PageUtils.getSize(),
-                                                                                  condition);
+                PageUtils.getSize(),
+                condition);
         return new PageResult<>(categoryList, count);
     }
 
@@ -65,8 +67,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
         List<Category> categoryList = categoryMapper.selectList(
                 new LambdaQueryWrapper<Category>()
                         .like(StrUtil.isNotBlank(condition.getKeywords()),
-                              Category::getCategoryName,
-                              condition.getKeywords())
+                                Category::getCategoryName,
+                                condition.getKeywords())
                         .orderByDesc(Category::getId));
         return BeanCopyUtils.copyBeanList(categoryList, CategoryOptionVO.class);
     }
@@ -101,21 +103,5 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
             throw new ServiceException("删除失败，该分类下存在文章");
         }
         this.removeBatchByIds(categoryIds);
-    }
-
-    @Override
-    public ArticleConditionList listCategoryArticles(ConditionDTO condition) {
-        List<ArticleConditionVO> articleList = articleMapper.selectArticlesByCondition(PageUtils.getLimitCurrent(),
-                                                                                       PageUtils.getSize(),
-                                                                                       condition);
-        Category category = this.getOne(new LambdaQueryWrapper<Category>()
-                                                .select(Category::getCategoryName)
-                                                .eq(Category::getId, condition.getCategoryId()));
-        CommonUtils.checkParamNull(category, "分类不存在");
-        String name = category.getCategoryName();
-        return ArticleConditionList.builder()
-                .articleConditionList(articleList)
-                .name(name)
-                .build();
     }
 }

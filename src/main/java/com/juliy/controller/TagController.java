@@ -6,6 +6,7 @@ import com.juliy.annotation.VisitLogger;
 import com.juliy.model.dto.ConditionDTO;
 import com.juliy.model.dto.TagDTO;
 import com.juliy.model.vo.*;
+import com.juliy.service.ArticleService;
 import com.juliy.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,10 +29,12 @@ import static com.juliy.constant.OptTypeConstant.*;
 public class TagController {
 
     private final TagService tagService;
+    private final ArticleService articleService;
 
     @Autowired
-    public TagController(TagService tagService) {
+    public TagController(TagService tagService, ArticleService articleService) {
         this.tagService = tagService;
+        this.articleService = articleService;
     }
 
     /**
@@ -116,6 +119,17 @@ public class TagController {
     @Operation(summary = "查看分类下的文章")
     @GetMapping("/article")
     public Result<ArticleConditionList> listTagArticles(ConditionDTO condition) {
-        return Result.success(tagService.listTagArticles(condition));
+        return Result.success(articleService.listArticlesByCondition(condition, "tag"));
+    }
+
+    /**
+     * 获取标签下的文章数量
+     * @param condition 查询条件
+     * @return 文章数量
+     */
+    @Operation(summary = "获取标签下的文章数量")
+    @GetMapping("/article/count")
+    public Result<Integer> countTagArticles(ConditionDTO condition) {
+        return Result.success(articleService.countArticleByCondition(condition));
     }
 }

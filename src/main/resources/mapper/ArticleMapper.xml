@@ -306,8 +306,26 @@
                 and tag_id = #{condition.tagId}
             </if>
         </where>
+        GROUP BY a.id
         ORDER BY a.id DESC
         LIMIT #{current}, #{size}
+    </select>
+
+    <select id="selectCountByCondition" resultType="integer">
+        SELECT COUNT(DISTINCT a.id)
+        FROM t_article a
+        INNER JOIN t_category c ON a.category_id = c.id
+        INNER JOIN t_article_tag tat ON a.id = tat.article_id
+        INNER JOIN t_tag t ON tat.tag_id = t.id
+        <where>
+            is_delete = 0 and `status` = 1
+            <if test="condition.categoryId != 0">
+                and category_id = #{condition.categoryId}
+            </if>
+            <if test="condition.tagId != 0">
+                and tag_id = #{condition.tagId}
+            </if>
+        </where>
     </select>
 
 </mapper>

@@ -59,7 +59,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private final RedisService redisService;
     private final LikeStrategyContext likeStrategyContext;
 
-
     @Autowired
     public ArticleServiceImpl(FileService fileService,
                               ArticleMapper articleMapper,
@@ -79,7 +78,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         this.likeStrategyContext = likeStrategyContext;
     }
 
-
     @Override
     public PageResult<ArticleAdminVO> listArticlesAdminByPage(ConditionDTO condition) {
         // 查询文章数量
@@ -90,10 +88,14 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 查询文章后台信息
         List<ArticleAdminVO> articleAdminList = articleMapper
                 .selectArticlesAdmin(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
-        // todo 获取点赞量和浏览量
         articleAdminList.forEach(articleAdminVO -> {
-            articleAdminVO.setLikeCount(0);
-            articleAdminVO.setViewCount(0);
+            // 查询浏览量
+            Double viewCount = Optional.ofNullable(redisService.getZsetScore(ARTICLE_VIEW_COUNT, articleAdminVO.getId()))
+                    .orElse((double) 0);
+            articleAdminVO.setViewCount(viewCount.intValue());
+            // 查询点赞量
+            Integer likeCount = redisService.getHash(ARTICLE_LIKE_COUNT, articleAdminVO.getId().toString());
+            articleAdminVO.setLikeCount(Optional.ofNullable(likeCount).orElse(0));
         });
         return new PageResult<>(articleAdminList, count);
     }
@@ -278,6 +280,36 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         likeStrategyContext.executeLikeStrategy(LikeTypeEnum.ARTICLE, articleId);
     }
 
+    @Override
+    public Integer countArticleByCondition(ConditionDTO condition) {
+        return articleMapper.selectCountByCondition(condition);
+    }
+
+    @Override
+    public ArticleConditionList listArticlesByCondition(ConditionDTO condition, String type) {
+        List<ArticleConditionVO> articleList = articleMapper.selectArticlesByCondition(PageUtils.getLimitCurrent(),
+                PageUtils.getSize(), condition);
+        String name = "";
+        // 查询分类或标签名称
+        if ("category".equals(type)) {
+            Category category = categoryMapper.selectOne(new LambdaQueryWrapper<Category>()
+                    .select(Category::getCategoryName)
+                    .eq(Category::getId, condition.getCategoryId()));
+            CommonUtils.checkParamNull(category, "分类不存在");
+            name = category.getCategoryName();
+        } else if ("tag".equals(type)) {
+            Tag tag = tagMapper.selectOne(new LambdaQueryWrapper<Tag>()
+                    .select(Tag::getTagName)
+                    .eq(Tag::getId, condition.getTagId()));
+            CommonUtils.checkParamNull(tag, "标签不存在");
+            name = tag.getTagName();
+        }
+        return ArticleConditionList.builder()
+                .articleConditionList(articleList)
+                .name(name)
+                .build();
+    }
+
     /**
      * 保存分类
      * @param categoryName 分类名称
@@ -307,7 +339,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private void saveTags(List<String> tagNameList, Integer articleId) {
         // 先删除文章对应的标签
         articleTagMapper.delete(new LambdaQueryWrapper<ArticleTag>()
-                                        .eq(ArticleTag::getArticleId, articleId));
+                .eq(ArticleTag::getArticleId, articleId));
 
         if (CollectionUtils.isNotEmpty(tagNameList)) {
             // 查询已存在的标签，并分别获取标签id和标签名称

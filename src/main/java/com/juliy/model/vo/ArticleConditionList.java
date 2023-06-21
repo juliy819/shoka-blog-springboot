@@ -26,4 +26,10 @@ public class ArticleConditionList {
      */
     @Schema(description = "条件名")
     private String name;
+
+    /**
+     * 文章数量
+     */
+    @Schema(description = "文章数量")
+    private Integer count;
 }

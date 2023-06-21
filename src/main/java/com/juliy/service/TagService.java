@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.juliy.entity.Tag;
 import com.juliy.model.dto.ConditionDTO;
 import com.juliy.model.dto.TagDTO;
-import com.juliy.model.vo.*;
+import com.juliy.model.vo.PageResult;
+import com.juliy.model.vo.TagAdminVO;
+import com.juliy.model.vo.TagOptionVO;
+import com.juliy.model.vo.TagVO;
 
 import java.util.List;
 
@@ -46,11 +49,4 @@ public interface TagService extends IService<Tag> {
      * @param tagIds 标签id列表
      */
     void removeTags(List<Integer> tagIds);
-
-    /**
-     * 查看分类下的文章
-     * @param condition 条件
-     * @return 文章列表
-     */
-    ArticleConditionList listTagArticles(ConditionDTO condition);
 }

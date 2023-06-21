@@ -107,4 +107,11 @@ public interface ArticleMapper extends BaseMapper<Article> {
     List<ArticleConditionVO> selectArticlesByCondition(@Param("current") Long current, @Param("size") Long size,
                                                        @Param("condition") ConditionDTO condition);
 
+    /**
+     * 根据条件查询文章数量
+     * @param condition 条件
+     * @return 文章数量
+     */
+    Integer selectCountByCondition(@Param("condition") ConditionDTO condition);
+
 }

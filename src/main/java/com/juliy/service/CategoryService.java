@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.juliy.entity.Category;
 import com.juliy.model.dto.CategoryDTO;
 import com.juliy.model.dto.ConditionDTO;
-import com.juliy.model.vo.*;
+import com.juliy.model.vo.CategoryAdminVO;
+import com.juliy.model.vo.CategoryOptionVO;
+import com.juliy.model.vo.CategoryVO;
+import com.juliy.model.vo.PageResult;
 
 import java.util.List;
 
@@ -46,11 +49,4 @@ public interface CategoryService extends IService<Category> {
      * @param categoryIds 分类id列表
      */
     void removeCategories(List<Integer> categoryIds);
-
-    /**
-     * 查看分类下的文章
-     * @param condition 条件
-     * @return 文章列表
-     */
-    ArticleConditionList listCategoryArticles(ConditionDTO condition);
 }

@@ -6,9 +6,11 @@ import com.juliy.annotation.VisitLogger;
 import com.juliy.model.dto.CategoryDTO;
 import com.juliy.model.dto.ConditionDTO;
 import com.juliy.model.vo.*;
+import com.juliy.service.ArticleService;
 import com.juliy.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,9 +29,12 @@ import static com.juliy.constant.OptTypeConstant.*;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final ArticleService articleService;
 
-    public CategoryController(CategoryService categoryService) {
+    @Autowired
+    public CategoryController(CategoryService categoryService, ArticleService articleService) {
         this.categoryService = categoryService;
+        this.articleService = articleService;
     }
 
     /**
@@ -106,14 +111,25 @@ public class CategoryController {
     }
 
     /**
-     * 查看分类下的文章
+     * 获取分类下的文章
      * @param condition 查询条件
      * @return 文章列表
      */
     @VisitLogger(value = "分类文章")
-    @Operation(summary = "查看分类下的文章")
+    @Operation(summary = "获取分类下的文章")
     @GetMapping("/article")
     public Result<ArticleConditionList> listCategoryArticles(ConditionDTO condition) {
-        return Result.success(categoryService.listCategoryArticles(condition));
+        return Result.success(articleService.listArticlesByCondition(condition, "category"));
+    }
+
+    /**
+     * 获取分类下的文章数量
+     * @param condition 查询条件
+     * @return 文章数量
+     */
+    @Operation(summary = "获取分类下的文章数量")
+    @GetMapping("/article/count")
+    public Result<Integer> countCategoryArticles(ConditionDTO condition) {
+        return Result.success(articleService.countArticleByCondition(condition));
     }
 }
