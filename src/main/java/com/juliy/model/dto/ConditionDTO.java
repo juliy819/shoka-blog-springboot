@@ -120,4 +120,10 @@ public class ConditionDTO {
      */
     @Schema(description = "文件路径")
     private String filePath;
+
+    /**
+     * 收藏夹分类名称
+     */
+    @Schema(description = "收藏夹分类名称")
+    private String favouriteClassifyName;
 }

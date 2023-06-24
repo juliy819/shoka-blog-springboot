@@ -31,8 +31,7 @@ public interface CategoryMapper extends BaseMapper<Category> {
      * @param condition 查询条件
      * @return 后台分类列表
      */
-    List<CategoryAdminVO> selectCategoriesAdmin(@Param("current") Long current, @Param("size") Long size, @Param(
-            "condition") ConditionDTO condition);
-
+    List<CategoryAdminVO> selectCategoriesAdmin(@Param("current") Long current, @Param("size") Long size,
+                                                @Param("condition") ConditionDTO condition);
 
 }

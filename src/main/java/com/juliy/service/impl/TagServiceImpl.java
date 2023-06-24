@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.juliy.entity.ArticleTag;
 import com.juliy.entity.Tag;
 import com.juliy.exception.ServiceException;
-import com.juliy.mapper.ArticleMapper;
 import com.juliy.mapper.ArticleTagMapper;
 import com.juliy.mapper.TagMapper;
 import com.juliy.model.dto.ConditionDTO;
@@ -35,13 +34,11 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     private final TagMapper tagMapper;
     private final ArticleTagMapper articleTagMapper;
-    private final ArticleMapper articleMapper;
 
     @Autowired
-    public TagServiceImpl(TagMapper tagMapper, ArticleTagMapper articleTagMapper, ArticleMapper articleMapper) {
+    public TagServiceImpl(TagMapper tagMapper, ArticleTagMapper articleTagMapper) {
         this.tagMapper = tagMapper;
         this.articleTagMapper = articleTagMapper;
-        this.articleMapper = articleMapper;
     }
 
     @Override
