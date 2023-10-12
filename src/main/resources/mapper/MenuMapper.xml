@@ -3,36 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.juliy.mapper.MenuMapper">
 
-    <sql id="selectMenuVO">
-        select id,
-               parent_id,
-               menu_name,
-               menu_type,
-               path,
-               icon,
-               component,
-               perms,
-               is_frame,
-               is_hidden,
-               is_disable,
-               order_num,
-               create_time,
-               update_time
-        from t_menu
-    </sql>
-
-    <select id="selectMenuList" resultType="com.juliy.entity.Menu">
-        <include refid="selectMenuVO"/>
-        <where>
-            <if test="menuName != null and menuName != ''">
-                AND menu_name like concat('%', #{menuName}, '%')
-            </if>
-            <if test="isDisable != null and isDisable != ''">
-                AND is_disable = #{isDisable}
-            </if>
-        </where>
-    </select>
-
     <select id="selectMenuTreeAll" resultType="com.juliy.entity.Menu">
         SELECT DISTINCT m.id,
                         m.parent_id,
@@ -41,7 +11,13 @@
                         m.path,
                         m.icon,
                         m.component,
-                        m.is_hidden
+                        m.perms,
+                        m.is_frame,
+                        m.is_hidden,
+                        m.is_disable,
+                        m.order_num,
+                        m.create_time,
+                        m.update_time
         FROM t_menu m
         where m.menu_type in ('M', 'C')
           and m.is_disable = 0
@@ -88,5 +64,50 @@
           AND m.is_disable = 0
     </select>
 
+
+    <select id="selectMenuList" resultType="com.juliy.model.vo.MenuVO">
+        select id,
+        parent_id,
+        menu_name,
+        menu_type,
+        path,
+        icon,
+        component,
+        perms,
+        is_frame,
+        is_hidden,
+        is_disable,
+        order_num,
+        create_time
+        from t_menu
+        <where>
+            <if test="condition.keywords != null">
+                AND menu_name like concat('%', #{condition.keywords}, '%')
+            </if>
+            <if test="condition.isDisable != null">
+                AND is_disable = #{condition.isDisable}
+            </if>
+        </where>
+        ORDER BY order_num
+    </select>
+
+    <select id="selectMenuTree" resultType="com.juliy.model.vo.MenuTree">
+        SELECT id,
+               parent_id,
+               menu_name as label
+        FROM t_menu
+        WHERE is_disable = 0
+        ORDER BY order_num
+    </select>
+
+    <select id="selectMenuOptionTree" resultType="com.juliy.model.vo.MenuTree">
+        SELECT id,
+               parent_id,
+               menu_name as label
+        FROM t_menu
+        WHERE is_disable = 0
+          AND menu_type in ('M', 'C')
+        ORDER BY order_num
+    </select>
 
 </mapper>

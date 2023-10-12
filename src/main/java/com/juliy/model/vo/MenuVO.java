@@ -1,18 +1,20 @@
-package com.juliy.model.dto;
+package com.juliy.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 /**
- * 菜单DTO
+ * 菜单VO
  * @author juliy
- * @date 2023/3/13 11:51
+ * @date 2023/10/12 17:18
  */
 @Data
-@Schema(description = "菜单DTO")
-public class MenuDTO {
+@Schema(description = "菜单VO")
+public class MenuVO {
     /**
      * 菜单id
      */
@@ -26,18 +28,16 @@ public class MenuDTO {
     private Integer parentId;
 
     /**
-     * 菜单名称
+     * 类型（M目录 C菜单 B按钮）
      */
-    @NotBlank(message = "菜单名称不能为空")
-    @Schema(description = "菜单名称")
-    private String menuName;
+    @Schema(description = "类型（M目录 C菜单 B按钮）")
+    private String menuType;
 
     /**
-     * 菜单类型（M目录 C菜单 B按钮）
+     * 菜单名称
      */
-    @NotBlank(message = "菜单类型不能为空")
-    @Schema(description = "菜单类型（M目录 C菜单 B按钮）")
-    private String menuType;
+    @Schema(description = "菜单名称")
+    private String menuName;
 
     /**
      * 路由地址
@@ -56,6 +56,12 @@ public class MenuDTO {
      */
     @Schema(description = "菜单组件")
     private String component;
+
+    /**
+     * 权限标识
+     */
+    @Schema(description = "权限标识")
+    private String perms;
 
     /**
      * 是否为页面 (0否 1是)
@@ -78,13 +84,19 @@ public class MenuDTO {
     /**
      * 菜单排序
      */
-    @NotNull(message = "菜单排序不能为空")
     @Schema(description = "菜单排序")
     private Integer orderNum;
 
     /**
-     * 权限标识
+     * 创建时间
      */
-    @Schema(description = "权限标识")
-    private String perms;
+    @Schema(description = "创建时间")
+    private LocalDateTime createTime;
+
+    /**
+     * 子菜单列表
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Schema(description = "子菜单列表")
+    private List<MenuVO> children;
 }

@@ -86,6 +86,7 @@ public class Menu {
     /**
      * 子菜单列表(不在表字段中)
      */
+    @TableField(exist = false)
     private List<Menu> children = new ArrayList<>();
 
     /**

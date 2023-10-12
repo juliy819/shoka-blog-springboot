@@ -2,6 +2,9 @@ package com.juliy.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.juliy.entity.Menu;
+import com.juliy.model.dto.ConditionDTO;
+import com.juliy.model.vo.MenuTree;
+import com.juliy.model.vo.MenuVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -41,4 +44,23 @@ public interface MenuMapper extends BaseMapper<Menu> {
      * @return 权限列表
      */
     List<String> selectPermissionByRoleId(@Param("roleId") String roleId);
+
+    /**
+     * 查询菜单列表
+     * @param condition 查询条件
+     * @return 菜单列表
+     */
+    List<MenuVO> selectMenuList(@Param("condition") ConditionDTO condition);
+
+    /**
+     * 查询菜单树
+     * @return 菜单树
+     */
+    List<MenuTree> selectMenuTree();
+
+    /**
+     * 查询菜单选项树
+     * @return 菜单选项树
+     */
+    List<MenuTree> selectMenuOptionTree();
 }

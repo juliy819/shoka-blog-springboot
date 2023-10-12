@@ -1,23 +1,31 @@
 package com.juliy.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.juliy.entity.Menu;
 import com.juliy.mapper.MenuMapper;
+import com.juliy.model.dto.ConditionDTO;
+import com.juliy.model.dto.MenuDTO;
+import com.juliy.model.vo.MenuTree;
+import com.juliy.model.vo.MenuVO;
 import com.juliy.model.vo.MetaVO;
 import com.juliy.model.vo.RouterVO;
 import com.juliy.service.MenuService;
+import com.juliy.utils.BeanCopyUtils;
 import com.juliy.utils.CommonUtils;
 import com.juliy.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.juliy.constant.CommonConstant.*;
+import static com.juliy.utils.CommonUtils.checkParam;
 
 
 /**
@@ -27,7 +35,7 @@ import static com.juliy.constant.CommonConstant.*;
  */
 @Slf4j
 @Service
-public class MenuServiceImpl implements MenuService {
+public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
 
     private final MenuMapper menuMapper;
 
@@ -56,7 +64,7 @@ public class MenuServiceImpl implements MenuService {
             router.setName(getRouteName(menu));
             router.setPath(getRouterPath(menu));
             router.setComponent(getComponent(menu));
-            router.setMeta(new MetaVO(menu.getMenuName(), menu.getIcon(), menu.getIsHidden() == 1, menu.getPath()));
+            router.setMeta(getMeta(menu));
 
             List<Menu> cMenus = menu.getChildren();
             // 有子节点且是目录类型时
@@ -71,11 +79,11 @@ public class MenuServiceImpl implements MenuService {
                 children.setPath(menu.getPath());
                 children.setComponent(menu.getComponent());
                 children.setName(StrUtil.upperFirst(menu.getPath()));
-                children.setMeta(new MetaVO(menu.getMenuName(), menu.getIcon(), menu.getIsHidden() == 1, menu.getPath()));
+                children.setMeta(getMeta(menu));
                 childrenList.add(children);
                 router.setChildren(childrenList);
             } else if (menu.getParentId().equals(PARENT_ID) && isInnerLink(menu)) {
-                router.setMeta(MetaVO.builder().title(menu.getMenuName()).icon(menu.getIcon()).build());
+                router.setMeta(getMeta(menu));
                 router.setPath("/");
                 List<RouterVO> childrenList = new ArrayList<>();
                 RouterVO children = new RouterVO();
@@ -83,13 +91,66 @@ public class MenuServiceImpl implements MenuService {
                 children.setPath(routerPath);
                 children.setComponent(INNER_LINK);
                 children.setName(StringUtils.capitalize(routerPath));
-                children.setMeta(new MetaVO(menu.getMenuName(), menu.getIcon(), menu.getIsHidden() == 1, menu.getPath()));
+                children.setMeta(getMeta(menu));
                 childrenList.add(children);
                 router.setChildren(childrenList);
             }
             routers.add(router);
         }
         return routers;
+    }
+
+    @Override
+    public List<MenuVO> listMenus(ConditionDTO condition) {
+        List<MenuVO> menuList = menuMapper.selectMenuList(condition);
+        // 当前菜单id列表
+        Set<Integer> menuIdList = menuList.stream()
+                .map(MenuVO::getId)
+                .collect(Collectors.toSet());
+        return menuList.stream().map(menuVO -> {
+            Integer parentId = menuVO.getParentId();
+            // parentId不在当前菜单id列表，说明为父级菜单id，根据此id作为递归的开始条件节点
+            if (!menuIdList.contains(parentId)) {
+                menuIdList.add(parentId);
+                return recurMenuList(parentId, menuList);
+            }
+            return new ArrayList<MenuVO>();
+        }).collect(ArrayList::new, ArrayList::addAll, ArrayList::addAll);
+    }
+
+    @Override
+    public List<MenuTree> listMenuTree() {
+        List<MenuTree> menuTreeList = menuMapper.selectMenuTree();
+        return recurMenuTreeList(PARENT_ID, menuTreeList);
+    }
+
+    @Override
+    public List<MenuTree> listMenuOptionTree() {
+        List<MenuTree> menuTreeList = menuMapper.selectMenuOptionTree();
+        return recurMenuTreeList(PARENT_ID, menuTreeList);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void saveOrUpdateMenu(MenuDTO menu) {
+        // 判断菜单是否已存在
+        Menu existMenu = this.getOne(
+                new LambdaQueryWrapper<Menu>()
+                        .select(Menu::getId)
+                        .eq(Menu::getMenuName, menu.getMenuName()));
+        checkParam(Objects.nonNull(existMenu) && !existMenu.getId().equals(menu.getId()),
+                "菜单已存在");
+
+        Menu newMenu = BeanCopyUtils.copyBean(menu, Menu.class);
+        this.saveOrUpdate(newMenu);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void removeMenu(Integer menuId) {
+        long menuCount = this.count(new LambdaQueryWrapper<Menu>().eq(Menu::getParentId, menuId));
+        checkParam(menuCount > 0, "该菜单下存在子菜单，无法删除");
+        menuMapper.deleteById(menuId);
     }
 
     /**
@@ -146,9 +207,17 @@ public class MenuServiceImpl implements MenuService {
      * @param m    父级菜单节点
      */
     private boolean hasChild(List<Menu> list, Menu m) {
-        return getChildList(list, m).size() > 0;
+        return !getChildList(list, m).isEmpty();
     }
 
+    /**
+     * 获取菜单元信息
+     * @param menu 菜单信息
+     * @return 菜单元信息
+     */
+    private MetaVO getMeta(Menu menu) {
+        return new MetaVO(menu.getMenuName(), menu.getIcon(), menu.getIsHidden() == 1, menu.getPath());
+    }
 
     /**
      * 获取路由名称
@@ -240,5 +309,31 @@ public class MenuServiceImpl implements MenuService {
     private String innerLinkReplaceEach(String path) {
         return StringUtils.replaceEach(path, new String[]{HTTP, HTTPS, WWW, "."},
                 new String[]{"", "", "", "/"});
+    }
+
+    /**
+     * 递归生成菜单列表
+     * @param parentId 父菜单id
+     * @param menuList 菜单列表
+     * @return 菜单列表
+     */
+    private List<MenuVO> recurMenuList(Integer parentId, List<MenuVO> menuList) {
+        return menuList.stream()
+                .filter(menuVO -> menuVO.getParentId().equals(parentId))
+                .peek(menuVO -> menuVO.setChildren(recurMenuList(menuVO.getId(), menuList)))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 递归生成菜单下拉树
+     * @param parentId     父菜单id
+     * @param menuTreeList 菜单树列表
+     * @return 菜单列表
+     */
+    private List<MenuTree> recurMenuTreeList(Integer parentId, List<MenuTree> menuTreeList) {
+        return menuTreeList.stream()
+                .filter(menu -> menu.getParentId().equals(parentId))
+                .peek(menu -> menu.setChildren(recurMenuTreeList(menu.getId(), menuTreeList)))
+                .collect(Collectors.toList());
     }
 }

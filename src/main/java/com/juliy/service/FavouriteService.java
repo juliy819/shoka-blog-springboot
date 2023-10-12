@@ -38,7 +38,7 @@ public interface FavouriteService extends IService<Favourite> {
 
     /**
      * 添加或修改收藏夹项
-     * @param favourite 收藏夹项
+     * @param favouriteDTO 收藏夹项
      */
     void saveOrUpdateFavourite(FavouriteDTO favouriteDTO);
 
