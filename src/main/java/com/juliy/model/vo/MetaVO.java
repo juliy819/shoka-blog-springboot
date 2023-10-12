@@ -1,5 +1,6 @@
 package com.juliy.model.vo;
 
+import com.juliy.utils.CommonUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -32,4 +33,18 @@ public class MetaVO {
     @Schema(description = "是否隐藏")
     private Boolean hidden;
 
+    /**
+     * 内链地址（http(s)://开头）
+     */
+    @Schema(description = "内链地址（http(s)://开头）")
+    private String link;
+
+    public MetaVO(String title, String icon, Boolean hidden, String link) {
+        this.title = title;
+        this.icon = icon;
+        this.hidden = hidden;
+        if (CommonUtils.isHttp(link)) {
+            this.link = link;
+        }
+    }
 }

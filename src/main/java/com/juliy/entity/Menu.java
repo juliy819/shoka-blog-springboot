@@ -64,6 +64,11 @@ public class Menu {
     private String perms;
 
     /**
+     * 是否为页面组件 (0否 1是)
+     */
+    private Integer isFrame;
+
+    /**
      * 是否隐藏 (0否 1是)
      */
     private Integer isHidden;

@@ -1,5 +1,7 @@
 package com.juliy.utils;
 
+import cn.hutool.core.util.StrUtil;
+import com.juliy.constant.CommonConstant;
 import com.juliy.exception.ServiceException;
 
 import java.util.ArrayList;
@@ -30,6 +32,16 @@ public class CommonUtils {
             throw new ServiceException("请输入正确的邮箱!");
         }
     }
+
+    /**
+     * 是否为http(s)://开头
+     * @param link 链接
+     * @return 结果
+     */
+    public static boolean isHttp(String link) {
+        return StrUtil.startWithAnyIgnoreCase(link, CommonConstant.HTTP, CommonConstant.HTTPS);
+    }
+
 
     /**
      * 转换List

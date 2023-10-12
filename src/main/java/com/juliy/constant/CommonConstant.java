@@ -18,6 +18,21 @@ public class CommonConstant {
     public static final Integer TRUE = 1;
 
     /**
+     * http请求
+     */
+    public static final String HTTP = "http://";
+
+    /**
+     * https请求
+     */
+    public static final String HTTPS = "https://";
+
+    /**
+     * www主域
+     */
+    public static final String WWW = "www.";
+
+    /**
      * 博主id
      */
     public static final Integer BLOGGER_ID = 1;
@@ -91,5 +106,10 @@ public class CommonConstant {
      * ParentView组件标识
      */
     public final static String PARENT_VIEW = "ParentView";
+
+    /**
+     * 内链组件标识
+     */
+    public final static String INNER_LINK = "InnerLink";
 
 }

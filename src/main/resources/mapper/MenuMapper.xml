@@ -3,6 +3,36 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.juliy.mapper.MenuMapper">
 
+    <sql id="selectMenuVO">
+        select id,
+               parent_id,
+               menu_name,
+               menu_type,
+               path,
+               icon,
+               component,
+               perms,
+               is_frame,
+               is_hidden,
+               is_disable,
+               order_num,
+               create_time,
+               update_time
+        from t_menu
+    </sql>
+
+    <select id="selectMenuList" resultType="com.juliy.entity.Menu">
+        <include refid="selectMenuVO"/>
+        <where>
+            <if test="menuName != null and menuName != ''">
+                AND menu_name like concat('%', #{menuName}, '%')
+            </if>
+            <if test="isDisable != null and isDisable != ''">
+                AND is_disable = #{isDisable}
+            </if>
+        </where>
+    </select>
+
     <select id="selectMenuTreeAll" resultType="com.juliy.entity.Menu">
         SELECT DISTINCT m.id,
                         m.parent_id,
@@ -26,7 +56,13 @@
                         m.path,
                         m.icon,
                         m.component,
-                        m.is_hidden
+                        m.perms,
+                        m.is_frame,
+                        m.is_hidden,
+                        m.is_disable,
+                        m.order_num,
+                        m.create_time,
+                        m.update_time
         FROM t_menu m
                  INNER JOIN t_role_menu rm ON m.id = rm.menu_id
                  INNER JOIN t_user_role ur ON rm.role_id = ur.role_id
